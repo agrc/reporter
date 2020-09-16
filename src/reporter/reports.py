@@ -21,13 +21,15 @@ class Report:
         """
         Return the report results in some form of data structure.
         """
-        self.logger.info('create_report not implemented')
+        # self.logger.info('create_report not implemented')
+        raise NotImplementedError('create_report not implemented')
 
     def save_report(self, data):
         """
         Write the information in 'data' to the Report's out_path.
         """
-        self.logger.info('save_report not implemented')
+        # self.logger.info('save_report not implemented')
+        raise NotImplementedError('save_report not implemented')
 
 
 class AGOLUsageReport(Report):
