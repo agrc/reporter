@@ -92,7 +92,8 @@ class Organization:
         item_dict['tags'] = ', '.join(tag_list)
         size_in_mb = item.size / 1024 / 1024
         item_dict['sizeMB'] = size_in_mb
-        item_dict['credits'] = size_in_mb * .24
+        item_dict['credits'] = size_in_mb * credentials.HFS_CREDITS_PER_MB
+        item_dict['cost'] = size_in_mb * credentials.HFS_CREDITS_PER_MB * credentials.DOLLARS_PER_CREDIT
 
         #: Sometimes data usage also gives an error, so try/except that as well
         try:
