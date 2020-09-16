@@ -1,9 +1,6 @@
 #: Secrets file
 credentials.py
 
-#: coverage report
-.coverage
-
 *.py[cod]
 
 # Packages
