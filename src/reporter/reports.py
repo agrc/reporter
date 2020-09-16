@@ -42,6 +42,7 @@ class AGOLUsageReport(Report):
         Returns a list of dicts whose keys are column headings and values are the column values:
         [{itemid: 'some_uuid', title: 'AGOL title', ...} ...]
         """
+        self.logger.info('Creating AGOL Usage Report...')
         item_info_dicts = []
 
         org = tools.Organization(self.logger)
@@ -59,6 +60,7 @@ class AGOLUsageReport(Report):
         Saves agol usage info contained in data to the object's out_path. The keys of the first value are used as
         the csv file's schema.
         """
+        self.logger.info('Saving AGOL Usage Report...')
         timestamp = datetime.datetime.now()
 
         #: Get the column values from the keys of the first item
