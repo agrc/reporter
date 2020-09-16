@@ -1,3 +1,6 @@
+#: Secrets file
+credentials.py
+
 *.py[cod]
 
 # Packages
