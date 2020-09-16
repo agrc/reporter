@@ -4,12 +4,16 @@
 
 import datetime
 
+import pytest
+
 from reporter import credentials, tools
 
 
-def test_get_item_info_correct_values(mocker):
-
-    org_mock = mocker.Mock()
+@pytest.fixture(scope='function')
+def item(mocker):
+    """
+    A default set of good values for the item to return
+    """
 
     group1_mock = mocker.Mock()
     group1_mock.title = 'Utah SGID TestSGIDGroup'
@@ -29,6 +33,13 @@ def test_get_item_info_correct_values(mocker):
     item.size = 12582912  #: 12 MB
     item.usage('1Y').sum.return_value = 1234
 
+    return item
+
+
+def test_get_item_info_correct_values(mocker, item):
+
+    org_mock = mocker.Mock()
+
     folder = 'folder'
 
     test_dict = tools.Organization.get_item_info(org_mock, item, folder)
@@ -46,3 +57,17 @@ def test_get_item_info_correct_values(mocker):
     assert test_dict['credits'] == 12 * credentials.HFS_CREDITS_PER_MB
     assert test_dict['cost'] == 12 * credentials.HFS_CREDITS_PER_MB * credentials.DOLLARS_PER_CREDIT
     assert test_dict['data_requests_1Y'] == 1234
+
+
+def test_get_item_info_not_open_data(mocker, item):
+    org_mock = mocker.Mock()
+
+    group_mock = mocker.Mock()
+    group_mock.title = 'test_group'
+
+    # item = mocker.Mock()
+    item.shared_with = {'groups': [group_mock]}
+
+    test_dict = tools.Organization.get_item_info(org_mock, item, 'folder')
+
+    assert test_dict['open_data'] == 'no'
