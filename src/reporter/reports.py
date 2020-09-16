@@ -53,16 +53,18 @@ class AGOLUsageReport(Report):
         return item_info_dicts
 
     def save_report(self, data):
-        #: Log date
+        """
+        Saves agol usage info contained in data to the object's out_path. The keys of the first value are used as
+        the csv file's schema.
+        """
         timestamp = datetime.datetime.now()
 
-        #: Get the column values from the keys of the first item and log as csv header
-        columns = data[0].keys()
-        # header = ','.join(columns)
+        #: Get the column values from the keys of the first item
+        columns = list(data[0].keys())
 
         with open(self.out_path, 'w', newline='\n') as out_csv_file:
-            out_writer = csv.writer(out_csv_file, delimiter=',')
-            out_writer.writerow([timestamp])
-            out_writer.writerow(columns)
-
-            #TODO: finish
+            out_writer = csv.DictWriter(out_csv_file, fieldnames=columns, delimiter=',')
+            out_writer.writerow({columns[0]: timestamp})  #: Puts timestamp as first item in csv
+            out_writer.writeheader()
+            for row in data:
+                out_writer.writerow(row)
