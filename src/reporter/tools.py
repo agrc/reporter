@@ -86,10 +86,7 @@ class Organization:
             item_dict['open_data'] = 'unknown'
         item_dict['groups'] = groups
 
-        tag_list = []
-        for tag in item.tags:
-            tag_list.append(tag)
-        item_dict['tags'] = ', '.join(tag_list)
+        item_dict['tags'] = ', '.join(item.tags)
         size_in_mb = item.size / 1024 / 1024
         item_dict['sizeMB'] = size_in_mb
         item_dict['credits'] = size_in_mb * credentials.HFS_CREDITS_PER_MB
