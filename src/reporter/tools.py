@@ -3,6 +3,7 @@ Classes that do all the heavy lifting
 """
 
 import datetime
+from collections import namedtuple
 
 import arcgis
 
@@ -12,6 +13,9 @@ from . import credentials
 
 
 class Organization:
+    """
+    An ArcGIS Online organization gis object and all the operations performed through it
+    """
 
     def __init__(self, logger):
 
@@ -99,3 +103,60 @@ class Organization:
             item_dict['data_requests_1Y'] = 'error'
 
         return item_dict
+
+
+class Metatable:
+    """
+    Represents the metatable containing information about SGID items uploaded to AGOL.
+    read_metatable() can be called on both the SGID AGOLItems table or the AGOL-hosted AGOLItems_Shelved table.
+    Table stored as self.metatable_dict in the following format:
+        {item_id: [table_sgid_name, table_agol_name, table_category, table_authoritative]}
+    Any duplicate item ids (either a table has the same AGOL item in more than one row, or the item id exists in
+    multiple tables) are added to the self.duplicate_keys list.
+    """
+
+    def __init__(self):
+        #: A dictionary of the metatable records, indexed by the metatable's itemid
+        #: values: {item_id: [table_sgid_name, table_agol_name, table_category, table_authoritative]}
+        self.metatable_dict = {}
+        self.duplicate_keys = []
+
+    def read_metatable(self, table, fields):
+        """
+        Read metatable 'table' into self.metatable_dict. Any duplicate Item IDs are added to self.duplicate_keys.
+        Any rows with an Item ID that can't be parsed as a UUID is not added to self.metatable_dict.
+
+        table:      Path to a table readable by arcpy.da.SearchCursor
+        fields:     List of fields names to access in the table.
+        """
+
+        for row in self._cursor_wrapper(table, fields):
+
+            #: If table is from SGID, get "authoritative" from table and set "category" to SGID. Otherwise,
+            #: get "category" from table and set "authoritative" to 'n'.
+            #: SGID's AGOLItems table has "Authoritative" field, shelved table does not.
+            if 'Authoritative' in fields:
+                table_sgid_name, table_agol_itemid, table_agol_name, table_authoritative = row
+                table_category = 'SGID'
+            else:
+                table_sgid_name, table_agol_itemid, table_agol_name, table_category = row
+                table_authoritative = 'n'
+
+            if table_agol_itemid not in self.metatable_dict:
+                self.metatable_dict[table_agol_itemid] = [
+                    table_sgid_name, table_agol_name, table_category, table_authoritative
+                ]
+            else:
+                self.duplicate_keys.append(table_agol_itemid)
+
+    def _cursor_wrapper(self, table, fields):
+        """
+        Wrapper for arcpy.da.SearchCursor so that it can be Mocked out in testing.
+
+        table:      Path to a table readable by arcpy.da.SearchCursor
+        fields:     List of fields names to access in the table.
+        """
+
+        with arcpy.da.SearchCursor(table, fields) as search_cursor:
+            for row in search_cursor:
+                yield row
