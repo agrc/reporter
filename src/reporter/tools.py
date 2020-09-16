@@ -66,6 +66,7 @@ class Organization:
         resides in, item_info builds a dictionary containing pertinent info about
         that item.
         """
+        self.logger.info(f'Getting info for {item.title}...')
         item_dict = {}
         item_dict['itemid'] = item.itemid
         item_dict['title'] = item.title
@@ -103,7 +104,7 @@ class Organization:
 
         #: Sometimes data usage also gives an error, so try/except that as well
         try:
-            item_dict['data_requests_1Y'] = item.usage('1Y').sum()
+            item_dict['data_requests_1Y'] = int(item.usage('1Y').sum())
         except:  # pylint: disable=bare-except
             item_dict['data_requests_1Y'] = 'error'
 
