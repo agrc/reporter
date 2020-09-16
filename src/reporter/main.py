@@ -6,7 +6,6 @@ this file is for testing linting...
 """
 
 import logging
-
 from pathlib import Path
 
 from . import reports
