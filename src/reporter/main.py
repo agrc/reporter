@@ -6,6 +6,7 @@ this file is for testing linting...
 """
 
 import logging
+import sys
 from pathlib import Path
 
 from . import reports
@@ -23,8 +24,21 @@ def run_reports(logger):
         report.save_report(data)
 
 
+def main():
+
+    cli_logger = logging.getLogger('reporter')
+    cli_logger.setLevel(logging.INFO)
+    detailed_formatter = logging.Formatter(
+        fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S'
+    )
+    cli_handler = logging.StreamHandler(stream=sys.stdout)
+    cli_handler.setLevel(logging.INFO)
+    cli_handler.setFormatter(detailed_formatter)
+    cli_logger.addHandler(cli_handler)
+
+    run_reports(cli_logger)
+
+
 if __name__ == '__main__':
 
-    reporter_logger = logging.Logger('Reporter')
-
-    run_reports(reporter_logger)
+    main()
