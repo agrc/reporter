@@ -5,12 +5,49 @@ Classes that do all the heavy lifting
 import datetime
 import uuid
 from collections import namedtuple
+from time import sleep
 
 import arcgis
 
 import arcpy
 
 from . import credentials
+
+
+def _get_sharing(item):
+    sharing = item.shared_with
+    everyone = str(sharing['everyone'])
+    org = str(sharing['org'])
+    groups = ', '.join([group.title for group in sharing['groups']])
+
+    return everyone, org, groups
+
+
+def _get_usage(item):
+    return int(item.usage('1Y').sum())
+
+
+def retry(worker, verbose=True, tries=1):
+    """
+    Helper function to retry a function or method with an incremental wait time.
+    Useful for methods reliant on unreliable network connections.
+    """
+    max_tries = 3
+    delay = 2  #: in seconds
+
+    try:
+        return worker()
+
+    #: Retry on HTTPErrors (ie, bad connections to AGOL)
+    except Exception as error:
+        if tries <= max_tries:
+            wait_time = delay**tries
+            if verbose:
+                print(f'Exception "{error}" thrown on "{worker}". Retrying after {wait_time} seconds...')
+            sleep(wait_time)
+            retry(worker, verbose, tries + 1)
+        else:
+            raise error
 
 
 class Organization:
@@ -89,24 +126,22 @@ class Organization:
         item_dict['modified'] = datetime.datetime.fromtimestamp(item.modified / 1000).strftime('%Y-%m-%d %H:%M:%S')
         item_dict['authoritative'] = item.content_status
 
-        #: Sometimes we get a permission denied error on group listing, so we wrap
-        #: it in a try/except to keep moving
-        group_names = []
+        #: Sometimes we get a permission denied error on group listing, so call retry() and then wrap that in a
+        #: try/except to keep moving if it really bombs out
         try:
-            for group in item.shared_with['groups']:
-                group_names.append(group.title)
-            groups = ', '.join(group_names)
+            item_dict['sharing_everyone'], item_dict['sharing_org'], item_dict['sharing_groups'] = retry(
+                lambda: _get_sharing(item)
+            )
         except:  # pylint: disable=bare-except
-            groups = 'error'
-        item_dict['groups'] = groups
+            item_dict['sharing_everyone'] = item_dict['sharing_org'] = item_dict['sharing_groups'] = 'sharing_error'
 
         #: Check if any of the item's groups are enabled for Open Data
         is_open_data = False
-        for group in group_names:
+        for group in item_dict['sharing_groups'].split(', '):
             if group in open_data_groups:
                 is_open_data = True
                 break
-        if groups == 'error':
+        if item_dict['sharing_groups'] == 'error':
             item_dict['open_data_group'] = 'group error'
         else:
             item_dict['open_data_group'] = str(is_open_data)
@@ -124,7 +159,7 @@ class Organization:
 
         #: Sometimes data usage also gives an error, so try/except that as well
         try:
-            item_dict['data_requests_1Y'] = int(item.usage('1Y').sum())
+            item_dict['data_requests_1Y'] = retry(lambda: _get_usage(item))
         except:  # pylint: disable=bare-except
             item_dict['data_requests_1Y'] = 'error'
 

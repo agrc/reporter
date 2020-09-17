@@ -77,7 +77,7 @@ class AGOLUsageReport(Report):
         Saves agol usage info contained in data to the object's out_path. The keys of the first value are used as
         the csv file's schema.
         """
-        self.logger.info('Saving AGOL Usage Report...')
+        self.logger.info(f'Saving AGOL Usage Report to {self.out_path}...')
         timestamp = datetime.datetime.now()
 
         #: Get the column values from the keys of the first item

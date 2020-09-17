@@ -29,10 +29,10 @@ def item(mocker):
     test_date = datetime.datetime(2020, 12, 25, 18, 30, 55)
     item.modified = test_date.timestamp() * 1000
     item.content_status = 'content_status'
-    item.shared_with = {'groups': [group1_mock, group2_mock]}
+    item.shared_with = {'everyone': True, 'org': True, 'groups': [group1_mock, group2_mock]}
     item.tags = ['tag1', 'tag2']
     item.size = 12582912  #: 12 MB
-    item.usage('1Y').sum.return_value = 1234
+    item.usage('1Y').sum.return_value = 1234.0
 
     return item
 
@@ -67,13 +67,15 @@ def test_get_item_info_correct_values(mocker, item):
     assert test_dict['views'] == 42
     assert test_dict['modified'] == '2020-12-25 18:30:55'
     assert test_dict['authoritative'] == 'content_status'
+    assert test_dict['sharing_everyone'] == 'True'
+    assert test_dict['sharing_org'] == 'True'
+    assert test_dict['sharing_groups'] == 'TestSGIDGroup, test_group'
     assert test_dict['open_data_group'] == 'True'
     assert test_dict['in_sgid'] == 'True'
-    assert test_dict['groups'] == 'TestSGIDGroup, test_group'
     assert test_dict['tags'] == 'tag1, tag2'
     assert test_dict['sizeMB'] == 12
-    assert test_dict['credits'] == 12 * credentials.HFS_CREDITS_PER_MB
-    assert test_dict['cost'] == 12 * credentials.HFS_CREDITS_PER_MB * credentials.DOLLARS_PER_CREDIT
+    assert test_dict['monthly_credits'] == 12 * credentials.HFS_CREDITS_PER_MB
+    assert test_dict['monthly_cost'] == 12 * credentials.HFS_CREDITS_PER_MB * credentials.DOLLARS_PER_CREDIT
     assert test_dict['data_requests_1Y'] == 1234
 
 
@@ -82,7 +84,7 @@ def test_get_item_info_not_open_data(mocker, item):
 
     group_mock = mocker.Mock()
     group_mock.title = 'test_group'
-    item.shared_with = {'groups': [group_mock]}
+    item.shared_with = {'everyone': True, 'org': True, 'groups': [group_mock]}
 
     open_data_groups = ['TestSGIDGroup']
     category = 'SGID'
@@ -114,3 +116,10 @@ def test_get_item_info_static_data_in_sgid(mocker, item):
     test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', category)
 
     assert test_dict['in_sgid'] == 'True'
+
+
+def test_get_sharing_valid_data(item):
+    sharing = tools._get_sharing(item)
+    assert sharing[0] == 'True'
+    assert sharing[1] == 'True'
+    assert sharing[2] == 'TestSGIDGroup, test_group'
