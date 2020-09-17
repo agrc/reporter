@@ -61,10 +61,11 @@ class Organization:
         """
         Returns a list of the organization's groups that are enabled for Open Data
         """
+        self.logger.info('Getting Open Data groups...')
         open_data_groups = []
         org_groups = self.gis.groups.search()  # pylint: disable=no-member
         for group in org_groups:
-            if group.isOpenData:
+            if 'isOepnData' in group and group.isOpenData:
                 open_data_groups.append(group.title)
 
         return open_data_groups
@@ -140,11 +141,13 @@ class Metatable:
     multiple tables) are added to the self.duplicate_keys list.
     """
 
-    def __init__(self):
+    def __init__(self, logger):
         #: A dictionary of the metatable records, indexed by the metatable's itemid
         #: values: {item_id: [sgid_name, agol_name, category, authoritative]}
         self.metatable_dict = {}
         self.duplicate_keys = []
+
+        self.logger = logger
 
     def read_metatable(self, table, fields):
         """
@@ -153,6 +156,8 @@ class Metatable:
         table:      Path to a table readable by arcpy.da.SearchCursor
         fields:     List of fields names to access in the table.
         """
+
+        self.logger.info(f'Reading in {table}...')
 
         MetatableRow = namedtuple('MetatableRow', ['sgid_name', 'agol_name', 'category', 'authoritative'])
 
