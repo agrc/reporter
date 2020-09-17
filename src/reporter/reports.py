@@ -41,9 +41,6 @@ class AGOLUsageReport(Report):
     considered part of the SGID.
     """
 
-    def __init__(self, logger, out_path):
-        super().__init__(logger, out_path)
-
     def create_report(self):
         """
         Returns a list of dicts whose keys are column headings and values are the column values:

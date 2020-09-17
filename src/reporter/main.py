@@ -13,6 +13,9 @@ from . import reports
 
 
 def run_reports(logger):
+    """
+    Main logic for instantiating report objects and running their methods.
+    """
 
     agol_out_path = Path(r'c:\temp\report_out_test.csv')
 
@@ -25,6 +28,9 @@ def run_reports(logger):
 
 
 def main():
+    """
+    CLI entry point; sets up logger.
+    """
 
     cli_logger = logging.getLogger('reporter')
     cli_logger.setLevel(logging.INFO)
