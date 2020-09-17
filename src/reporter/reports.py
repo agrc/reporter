@@ -1,9 +1,12 @@
 """
-Report base class and the actual report classes that inherit from it. Each class should implement a create_report and a save_report method.
+Report base class and the actual report classes that inherit from it. Each class should implement a create_report
+and a save_report method.
 """
 
 import csv
 import datetime
+
+from reporter import credentials
 
 from . import tools
 
@@ -33,6 +36,10 @@ class Report:
 
 
 class AGOLUsageReport(Report):
+    """
+    Reports usage of AGOL Hosted Feature Services. Relies on SGID and AGOL metatables to determine whether item is
+    considered part of the SGID.
+    """
 
     def __init__(self, logger, out_path):
         super().__init__(logger, out_path)
@@ -45,13 +52,23 @@ class AGOLUsageReport(Report):
         self.logger.info('Creating AGOL Usage Report...')
         item_info_dicts = []
 
-        org = tools.Organization(self.logger)
+        org = tools.Organization(self.logger, credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
         folders = org.get_users_folders()
         items = org.get_feature_services_in_folders(folders)
+        open_data_groups = org.get_open_data_groups()
+
+        metatable = tools.Metatable(self.logger)
+        sgid_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'Authoritative']
+        agol_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'CATEGORY']
+        metatable.read_metatable(credentials.SGID_METATABLE, sgid_fields)
+        metatable.read_metatable(credentials.AGOL_METATABLE, agol_fields)
 
         for item_tuple in items:
             item, folder = item_tuple
-            item_info_dicts.append(org.get_item_info(item, folder))
+            metatable_category = None
+            if item.itemid in metatable.metatable_dict:
+                metatable_category = metatable.metatable_dict[item.itemid].category
+            item_info_dicts.append(org.get_item_info(item, open_data_groups, folder, metatable_category))
 
         return item_info_dicts
 
