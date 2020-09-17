@@ -3,6 +3,7 @@ Classes that do all the heavy lifting
 """
 
 import datetime
+import uuid
 from collections import namedtuple
 
 import arcgis
@@ -56,7 +57,19 @@ class Organization:
 
         return feature_service_items
 
-    def get_item_info(self, item, folder):
+    def get_open_data_groups(self):
+        """
+        Returns a list of the organization's groups that are enabled for Open Data
+        """
+        open_data_groups = []
+        org_groups = self.gis.groups.search()  # pylint: disable=no-member
+        for group in org_groups:
+            if group.isOpenData:
+                open_data_groups.append(group.title)
+
+        return open_data_groups
+
+    def get_item_info(self, item, open_data_groups, folder, metatable_row=None):
         """
         Given an item object and a string representing the name of the folder it
         resides in, item_info builds a dictionary containing pertinent info about
@@ -77,18 +90,24 @@ class Organization:
 
         #: Sometimes we get a permission denied error on group listing, so we wrap
         #: it in a try/except to keep moving
-        item_dict['open_data'] = 'no'
+        group_names = []
         try:
-            group_names = []
             for group in item.shared_with['groups']:
                 group_names.append(group.title)
-                if 'Utah SGID' in group.title:
-                    item_dict['open_data'] = 'yes'
             groups = ', '.join(group_names)
         except:  # pylint: disable=bare-except
             groups = 'error'
-            item_dict['open_data'] = 'unknown'
         item_dict['groups'] = groups
+
+        is_open_data = False
+        for group in group_names:
+            if group in open_data_groups:
+                is_open_data = True
+                break
+        if groups == 'error':
+            item_dict['open_data'] = 'group error'
+        else:
+            item_dict['open_data'] = str(is_open_data)
 
         item_dict['tags'] = ', '.join(item.tags)
         size_in_mb = item.size / 1024 / 1024
@@ -109,26 +128,27 @@ class Metatable:
     """
     Represents the metatable containing information about SGID items uploaded to AGOL.
     read_metatable() can be called on both the SGID AGOLItems table or the AGOL-hosted AGOLItems_Shelved table.
-    Table stored as self.metatable_dict in the following format:
-        {item_id: [table_sgid_name, table_agol_name, table_category, table_authoritative]}
+    Table stored as namedtuples in self.metatable_dict using the itemid as the key:
+        {item_id: [sgid_name, agol_name, category, authoritative]}
     Any duplicate item ids (either a table has the same AGOL item in more than one row, or the item id exists in
     multiple tables) are added to the self.duplicate_keys list.
     """
 
     def __init__(self):
         #: A dictionary of the metatable records, indexed by the metatable's itemid
-        #: values: {item_id: [table_sgid_name, table_agol_name, table_category, table_authoritative]}
+        #: values: {item_id: [sgid_name, agol_name, category, authoritative]}
         self.metatable_dict = {}
         self.duplicate_keys = []
 
     def read_metatable(self, table, fields):
         """
         Read metatable 'table' into self.metatable_dict. Any duplicate Item IDs are added to self.duplicate_keys.
-        Any rows with an Item ID that can't be parsed as a UUID is not added to self.metatable_dict.
 
         table:      Path to a table readable by arcpy.da.SearchCursor
         fields:     List of fields names to access in the table.
         """
+
+        MetatableRow = namedtuple('MetatableRow', ['sgid_name', 'agol_name', 'category', 'authoritative'])
 
         for row in self._cursor_wrapper(table, fields):
 
@@ -142,10 +162,20 @@ class Metatable:
                 table_sgid_name, table_agol_itemid, table_agol_name, table_category = row
                 table_authoritative = 'n'
 
+            #: Item IDs are UUIDs. If we can't parse the item id listed in the table, it means the layer is not
+            #: in AGOL and this row should be skipped (catches both magic words and empty entries)
+            try:
+                uuid.UUID(table_agol_itemid)
+            except (AttributeError, ValueError, TypeError):
+                continue
+
             if table_agol_itemid not in self.metatable_dict:
-                self.metatable_dict[table_agol_itemid] = [
-                    table_sgid_name, table_agol_name, table_category, table_authoritative
-                ]
+                self.metatable_dict[table_agol_itemid] = MetatableRow(
+                    table_sgid_name,
+                    table_agol_name,
+                    table_category,
+                    table_authoritative,
+                )
             else:
                 self.duplicate_keys.append(table_agol_itemid)
 
