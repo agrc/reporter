@@ -18,22 +18,22 @@ class Organization:
     An ArcGIS Online organization gis object and all the operations performed through it
     """
 
-    def __init__(self, logger):
+    def __init__(self, logger, org, username, password):
 
         self.logger = logger
         self.logger.info('==========')
-        self.logger.info(f'Portal: {credentials.ORG}')
-        self.logger.info(f'User: {credentials.USERNAME}')
+        self.logger.info(f'Portal: {org}')
+        self.logger.info(f'User: {username}')
         self.logger.info('==========')
 
-        self.gis = arcgis.gis.GIS(credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
-        self.user_item = self.gis.users.get(credentials.USERNAME)  # pylint: disable=no-member
+        self.gis = arcgis.gis.GIS(org, username, password)
+        self.user_item = self.gis.users.me  # pylint: disable=no-member
 
     def get_users_folders(self):
         """Get all the Feature Service item objects in the user's folders"""
 
         #: Build list of folders. 'None' gives us the root folder.
-        self.logger.info(f'Getting {credentials.USERNAME}\'s folders...')
+        self.logger.info(f'Getting {self.user_item.username}\'s folders...')
         folders = [None]
         for folder in self.user_item.folders:
             folders.append(folder['title'])
