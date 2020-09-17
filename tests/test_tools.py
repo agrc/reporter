@@ -51,14 +51,15 @@ def metatable_row(mocker):
     return metatable_row
 
 
-def test_get_item_info_correct_values(mocker, item, metatable_row):
+def test_get_item_info_correct_values(mocker, item):
 
     org_mock = mocker.Mock()
 
     folder = 'folder'
     open_data_groups = ['TestSGIDGroup']
+    category = 'SGID'
 
-    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, metatable_row)
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, category)
     assert test_dict['itemid'] == 'itemid'
     assert test_dict['title'] == 'title'
     assert test_dict['owner'] == 'owner'
@@ -76,7 +77,7 @@ def test_get_item_info_correct_values(mocker, item, metatable_row):
     assert test_dict['data_requests_1Y'] == 1234
 
 
-def test_get_item_info_not_open_data(mocker, item, metatable_row):
+def test_get_item_info_not_open_data(mocker, item):
     org_mock = mocker.Mock()
 
     group_mock = mocker.Mock()
@@ -84,31 +85,32 @@ def test_get_item_info_not_open_data(mocker, item, metatable_row):
     item.shared_with = {'groups': [group_mock]}
 
     open_data_groups = ['TestSGIDGroup']
+    category = 'SGID'
 
-    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', metatable_row)
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', category)
 
     assert test_dict['open_data_group'] == 'False'
 
 
-def test_get_item_info_shelved_data_not_in_sgid(mocker, item, metatable_row):
+def test_get_item_info_shelved_data_not_in_sgid(mocker, item):
     org_mock = mocker.Mock()
 
     open_data_groups = ['TestSGIDGroup']
 
-    metatable_row.category = 'shelved'
+    category = 'shelved'
 
-    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', metatable_row)
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', category)
 
     assert test_dict['in_sgid'] == 'False'
 
 
-def test_get_item_info_static_data_in_sgid(mocker, item, metatable_row):
+def test_get_item_info_static_data_in_sgid(mocker, item):
     org_mock = mocker.Mock()
 
     open_data_groups = ['TestSGIDGroup']
 
-    metatable_row.category = 'static'
+    category = 'static'
 
-    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', metatable_row)
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, 'folder', category)
 
     assert test_dict['in_sgid'] == 'True'
