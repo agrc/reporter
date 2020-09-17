@@ -17,3 +17,5 @@ def test_AGOL_save_report_gets_columns_right(mocker, tmp_path):
 
     content = out_path.read_text()
     assert content == 'foo_date,\nfoo,bar\n1,2\n3,4\n'
+
+    # def test_AGOL_create_report_itemid_not_in_metatable
