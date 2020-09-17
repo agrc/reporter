@@ -69,7 +69,7 @@ class Organization:
 
         return open_data_groups
 
-    def get_item_info(self, item, open_data_groups, folder, metatable_row=None):
+    def get_item_info(self, item, open_data_groups, folder, metatable_row):
         """
         Given an item object and a string representing the name of the folder it
         resides in, item_info builds a dictionary containing pertinent info about
@@ -99,15 +99,21 @@ class Organization:
             groups = 'error'
         item_dict['groups'] = groups
 
+        #: Check if any of the item's groups are enabled for Open Data
         is_open_data = False
         for group in group_names:
             if group in open_data_groups:
                 is_open_data = True
                 break
         if groups == 'error':
-            item_dict['open_data'] = 'group error'
+            item_dict['open_data_group'] = 'group error'
         else:
-            item_dict['open_data'] = str(is_open_data)
+            item_dict['open_data_group'] = str(is_open_data)
+
+        #: Item is part of SGID if its metatable group is not "shelved"
+        item_dict['in_sgid'] = 'True'
+        if metatable_row.category == 'shelved':
+            item_dict['in_sgid'] = 'False'
 
         item_dict['tags'] = ', '.join(item.tags)
         size_in_mb = item.size / 1024 / 1024
