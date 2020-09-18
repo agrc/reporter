@@ -3,12 +3,7 @@ Report base class and the actual report classes that inherit from it. Each class
 and a save_report method.
 """
 
-import csv
-import datetime
-
-from reporter import credentials
-
-from . import tools, report_writers
+from . import credentials, report_writers, tools
 
 
 class Report:

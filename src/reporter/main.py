@@ -5,11 +5,12 @@ a description of what this module does.
 this file is for testing linting...
 """
 
+import datetime
 import logging
 import sys
 from pathlib import Path
 
-from . import reports
+from . import reports, credentials
 
 
 def run_reports(logger):
@@ -17,7 +18,8 @@ def run_reports(logger):
     Main logic for instantiating report objects and running their methods.
     """
 
-    agol_out_path = Path(r'c:\temp\report_out_test.csv')
+    now = datetime.datetime.today().strftime('%y-%m-%d %H:%M:%S')
+    agol_out_path = Path(credentials.REPORT_DIR, 'AGOLUsage', f'AGOLReport_{now}.csv')
 
     reports_to_run = []
     reports_to_run.append(reports.AGOLUsageReport(logger, agol_out_path))
