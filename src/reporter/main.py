@@ -10,7 +10,7 @@ import logging
 import sys
 from pathlib import Path
 
-from . import reports, credentials
+from . import credentials, reports
 
 
 def run_reports(logger):
