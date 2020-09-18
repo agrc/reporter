@@ -8,7 +8,7 @@ import datetime
 
 from reporter import credentials
 
-from . import tools
+from . import tools, report_writers
 
 
 class Report:
@@ -75,14 +75,5 @@ class AGOLUsageReport(Report):
         the csv file's schema.
         """
         self.logger.info(f'Saving AGOL Usage Report to {self.out_path}...')
-        timestamp = datetime.datetime.now()
 
-        #: Get the column values from the keys of the first item
-        columns = list(data[0].keys())
-
-        with open(self.out_path, 'w', newline='\n') as out_csv_file:
-            out_writer = csv.DictWriter(out_csv_file, fieldnames=columns, delimiter=',')
-            out_writer.writerow({columns[0]: timestamp})  #: Puts timestamp as first item in csv
-            out_writer.writeheader()
-            for row in data:
-                out_writer.writerow(row)
+        report_writers.list_of_dicts_to_csv(data, self.out_path)
