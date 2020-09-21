@@ -3,7 +3,6 @@
 """
 
 import datetime
-from collections import namedtuple
 
 import pytest
 
