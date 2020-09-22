@@ -9,12 +9,14 @@ from time import sleep
 
 try:
     import arcgis
-
     import arcpy
-except:
+except ModuleNotFoundError:
     pass
 
-from . import credentials
+try:
+    from . import credentials
+except ModuleNotFoundError:
+    from . import credentials_template as credentials
 
 
 def _get_sharing(item):
