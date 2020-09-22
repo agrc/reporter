@@ -17,6 +17,9 @@ def list_of_dicts_to_csv(data, out_path):
 
     timestamp = datetime.datetime.now().strftime('%y-%m-%d %H:%M:%S')
 
+    #: Make sure our output directory exists
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     #: Get the column values from the keys of the first item
     columns = list(data[0].keys())
 
@@ -42,6 +45,10 @@ def list_of_dicts_to_rotating_logger(data, out_path, separator='|', rotate_count
                     of daily reports.
 
     """
+
+    #: Make sure our output directory exists
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     #: Set up a rotating file handler for the report log
     report_logger = logging.getLogger('report_logger')
     report_handler = logging.handlers.RotatingFileHandler(out_path, backupCount=rotate_count)
