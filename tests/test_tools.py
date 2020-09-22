@@ -8,6 +8,12 @@ import pytest
 
 from reporter import credentials, tools
 
+try:
+    import arcpy
+    import arcgis
+except:
+    pass
+
 
 @pytest.fixture(scope='function')
 def item(mocker):
