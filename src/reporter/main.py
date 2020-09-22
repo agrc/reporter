@@ -10,7 +10,11 @@ import logging
 import sys
 from pathlib import Path
 
-from . import credentials, reports
+from . import reports
+try:
+    from . import credentials
+except ModuleNotFoundError:
+    from . import credentials_template as credentials
 
 
 def run_reports(logger):
@@ -18,7 +22,7 @@ def run_reports(logger):
     Main logic for instantiating report objects and running their methods.
     """
 
-    now = datetime.datetime.today().strftime('%y-%m-%d %H:%M:%S')
+    now = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
     agol_out_path = Path(credentials.REPORT_DIR, 'AGOLUsage', f'AGOLReport_{now}.csv')
 
     reports_to_run = []
