@@ -7,9 +7,12 @@ import uuid
 from collections import namedtuple
 from time import sleep
 
-import arcgis
+try:
+    import arcgis
 
-import arcpy
+    import arcpy
+except:
+    pass
 
 from . import credentials
 
