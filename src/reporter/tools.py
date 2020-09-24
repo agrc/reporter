@@ -107,7 +107,7 @@ class Organization:
         open_data_groups = []
         org_groups = self.gis.groups.search()  # pylint: disable=no-member
         for group in org_groups:
-            if 'isOepnData' in group and group.isOpenData:
+            if hasattr(group, 'isOpenData') and group.isOpenData:
                 open_data_groups.append(group.title)
 
         return open_data_groups

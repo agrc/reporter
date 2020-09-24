@@ -122,3 +122,21 @@ def test_get_sharing_valid_data(item):
     assert sharing[0] == 'True'
     assert sharing[1] == 'True'
     assert sharing[2] == 'TestSGIDGroup, test_group'
+
+
+def test_get_open_data_groups_open_data_True(mocker):
+
+    group_mock = mocker.Mock(spec=['isOpenData', 'title'], name='group mock')
+    group_mock.isOpenData = True
+    group_mock.title = 'OpenDataGroup'
+
+    gis_mock = mocker.Mock(name='gis mock')
+
+    gis_mock.gis.groups.search.return_value = [group_mock]
+
+    #: The "isOpenData in group" check doesn't work via mock- change in either code or mock
+
+    open_data_groups = tools.Organization.get_open_data_groups(gis_mock)
+
+    #: This should be failing...
+    assert open_data_groups == ['OpenDataGroup']
