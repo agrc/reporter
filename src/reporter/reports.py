@@ -4,6 +4,7 @@ and a save_report method.
 """
 
 from . import report_writers, tools
+
 try:
     from . import credentials
 except ModuleNotFoundError:

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from . import reports
+
 try:
     from . import credentials
 except ModuleNotFoundError:
