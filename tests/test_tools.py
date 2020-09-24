@@ -134,9 +134,6 @@ def test_get_open_data_groups_open_data_True(mocker):
 
     gis_mock.gis.groups.search.return_value = [group_mock]
 
-    #: The "isOpenData in group" check doesn't work via mock- change in either code or mock
-
     open_data_groups = tools.Organization.get_open_data_groups(gis_mock)
 
-    #: This should be failing...
     assert open_data_groups == ['OpenDataGroup']
