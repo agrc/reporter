@@ -3,6 +3,7 @@
 """
 
 import datetime
+from collections import namedtuple
 
 import pytest
 
@@ -136,8 +137,11 @@ def test_get_item_info_sharing_error(mocker, item):
     open_data_groups = ['Foo']
     category = 'static'
 
+    _retry_mock = mocker.patch('reporter.tools.retry')
+    _retry_mock.side_effect = Exception
+
     _get_sharing_mock = mocker.patch('reporter.tools._get_sharing')
-    _get_sharing_mock.return_value = Exception
+    _get_sharing_mock.side_effect = Exception
 
     test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, category)
 
@@ -145,6 +149,24 @@ def test_get_item_info_sharing_error(mocker, item):
     assert test_dict['sharing_org'] == 'sharing_error'
     assert test_dict['sharing_groups'] == 'sharing_error'
     assert test_dict['open_data_group'] == 'group error'
+
+
+def test_get_item_info_usage_error(mocker, item):
+    org_mock = mocker.Mock()
+
+    folder = 'Foo'
+    open_data_groups = ['Foo']
+    category = 'static'
+
+    _retry_mock = mocker.patch('reporter.tools.retry')
+    _retry_mock.side_effect = Exception
+
+    _get_usage_mock = mocker.patch('reporter.tools._get_usage')
+    _get_usage_mock.side_effect = Exception
+
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, category)
+
+    assert test_dict['data_requests_1Y'] == 'error'
 
 
 def test_get_sharing_valid_data(item):
@@ -182,3 +204,147 @@ def test_get_open_data_groups_open_data_False(mocker):
     open_data_groups = tools.Organization.get_open_data_groups(gis_mock)
 
     assert open_data_groups == []
+
+
+def test_get_feature_services_in_folders_one_item(mocker):
+
+    folders = ['folder']
+
+    item_mock = mocker.Mock()
+    item_mock.type = 'Feature Service'
+
+    org_mock = mocker.Mock()
+    org_mock.user_item.items.return_value = [item_mock]
+
+    items_folders = tools.Organization.get_feature_services_in_folders(org_mock, folders)
+
+    assert items_folders == [(item_mock, 'folder')]
+
+
+def test_get_feature_services_in_folders_empty_for_no_feature_services(mocker):
+
+    folders = ['folder']
+
+    item_mock = mocker.Mock()
+    item_mock.type = 'Bad Service'
+
+    org_mock = mocker.Mock()
+    org_mock.user_item.items.return_value = [item_mock]
+
+    items_folders = tools.Organization.get_feature_services_in_folders(org_mock, folders)
+
+    assert items_folders == []
+
+
+def test_get_users_folders(mocker):
+    fake_folder = {'title': 'test folder'}
+
+    org_mock = mocker.Mock()
+    org_mock.user_item.folders = [fake_folder]
+
+    folders = tools.Organization.get_users_folders(org_mock)
+
+    assert folders == [None, 'test folder']
+
+
+def test_get_users_folders_returns_None_for_root(mocker):
+    org_mock = mocker.Mock()
+    org_mock.user_item.folders = []
+
+    folders = tools.Organization.get_users_folders(org_mock)
+
+    assert folders == [None]
+
+
+def test_retry_calls_method_four_times(mocker):
+    mocker.patch('reporter.tools.sleep')
+
+    worker_mock = mocker.Mock()
+    worker_mock.side_effect = Exception
+
+    try:
+        tools.retry(worker_mock)
+    except:
+        pass
+
+    assert worker_mock.call_count == 4
+
+
+def test_read_sgid_metatable_to_dictionary(mocker):
+
+    def return_sgid_row(self, table, fields):
+        #: table_sgid_name, table_agol_itemid, table_agol_name, table_authoritative
+        for row in [['table name', '11112222333344445555666677778888', 'agol title', None]]:
+            yield row
+
+    sgid_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'Authoritative']
+
+    mocker.patch('reporter.tools.Metatable._cursor_wrapper', return_sgid_row)
+
+    mock_logger = mocker.Mock()
+
+    test_table = tools.Metatable(mock_logger)
+    test_table.read_metatable('something', sgid_fields)
+
+    assert test_table.metatable_dict['11112222333344445555666677778888'] == ('table name', 'agol title', 'SGID', None)
+
+
+def test_read_agol_metatable_to_dictionary(mocker):
+
+    def return_agol_row(self, table, fields):
+        #: table_sgid_name, table_agol_itemid, table_agol_name, table_category
+        for row in [['table name', '11112222333344445555666677778888', 'agol title', 'shelved']]:
+            yield row
+
+    agol_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'CATEGORY']
+
+    mocker.patch('reporter.tools.Metatable._cursor_wrapper', return_agol_row)
+
+    mock_logger = mocker.Mock()
+
+    test_table = tools.Metatable(mock_logger)
+    test_table.read_metatable('something', agol_fields)
+
+    assert test_table.metatable_dict['11112222333344445555666677778888'] == ('table name', 'agol title', 'shelved', 'n')
+
+
+def test_read_metatable_returns_nothing_on_bad_uuid(mocker):
+
+    def return_agol_row(self, table, fields):
+        #: table_sgid_name, table_agol_itemid, table_agol_name, table_category
+        for row in [['table name', 'bad_uuid', 'agol title', 'shelved']]:
+            yield row
+
+    agol_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'CATEGORY']
+
+    mocker.patch('reporter.tools.Metatable._cursor_wrapper', return_agol_row)
+
+    mock_logger = mocker.Mock()
+
+    test_table = tools.Metatable(mock_logger)
+    test_table.read_metatable('something', agol_fields)
+
+    assert test_table.metatable_dict == {}
+
+
+def test_read_metatable_handles_duplicate_rows(mocker):
+
+    def return_agol_row(self, table, fields):
+        #: table_sgid_name, table_agol_itemid, table_agol_name, table_category
+        for row in [
+            ['table name', '11112222333344445555666677778888', 'agol title', 'shelved'],
+            ['table name', '11112222333344445555666677778888', 'agol title', 'shelved'],
+        ]:
+            yield row
+
+    agol_fields = ['TABLENAME', 'AGOL_ITEM_ID', 'AGOL_PUBLISHED_NAME', 'CATEGORY']
+
+    mocker.patch('reporter.tools.Metatable._cursor_wrapper', return_agol_row)
+
+    mock_logger = mocker.Mock()
+
+    test_table = tools.Metatable(mock_logger)
+    test_table.read_metatable('something', agol_fields)
+
+    assert test_table.metatable_dict['11112222333344445555666677778888'] == ('table name', 'agol title', 'shelved', 'n')
+    assert test_table.duplicate_keys == ['11112222333344445555666677778888']
