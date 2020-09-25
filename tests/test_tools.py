@@ -117,6 +117,36 @@ def test_get_item_info_static_data_in_sgid(mocker, item):
     assert test_dict['in_sgid'] == 'True'
 
 
+def test_get_item_info_root_folder(mocker, item):
+    org_mock = mocker.Mock()
+
+    folder = None
+    open_data_groups = ['Foo']
+    category = 'static'
+
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, category)
+
+    assert test_dict['folder'] == '_root'
+
+
+def test_get_item_info_sharing_error(mocker, item):
+    org_mock = mocker.Mock()
+
+    folder = 'Foo'
+    open_data_groups = ['Foo']
+    category = 'static'
+
+    _get_sharing_mock = mocker.patch('reporter.tools._get_sharing')
+    _get_sharing_mock.return_value = Exception
+
+    test_dict = tools.Organization.get_item_info(org_mock, item, open_data_groups, folder, category)
+
+    assert test_dict['sharing_everyone'] == 'sharing_error'
+    assert test_dict['sharing_org'] == 'sharing_error'
+    assert test_dict['sharing_groups'] == 'sharing_error'
+    assert test_dict['open_data_group'] == 'group error'
+
+
 def test_get_sharing_valid_data(item):
     sharing = tools._get_sharing(item)
     assert sharing[0] == 'True'
@@ -137,3 +167,18 @@ def test_get_open_data_groups_open_data_True(mocker):
     open_data_groups = tools.Organization.get_open_data_groups(gis_mock)
 
     assert open_data_groups == ['OpenDataGroup']
+
+
+def test_get_open_data_groups_open_data_False(mocker):
+
+    group_mock = mocker.Mock(spec=['isOpenData', 'title'], name='group mock')
+    group_mock.isOpenData = False
+    group_mock.title = 'PrivateGroup'
+
+    gis_mock = mocker.Mock(name='gis mock')
+
+    gis_mock.gis.groups.search.return_value = [group_mock]
+
+    open_data_groups = tools.Organization.get_open_data_groups(gis_mock)
+
+    assert open_data_groups == []
