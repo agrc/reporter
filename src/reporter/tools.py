@@ -146,7 +146,7 @@ class Organization:
             if group in open_data_groups:
                 is_open_data = True
                 break
-        if item_dict['sharing_groups'] == 'error':
+        if item_dict['sharing_groups'] == 'sharing_error':
             item_dict['open_data_group'] = 'group error'
         else:
             item_dict['open_data_group'] = str(is_open_data)
