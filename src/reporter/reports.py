@@ -7,7 +7,7 @@ from . import report_writers, tools
 
 try:
     from . import credentials
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     from . import credentials_template as credentials
 
 

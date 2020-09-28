@@ -14,7 +14,7 @@ from . import reports
 
 try:
     from . import credentials
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     from . import credentials_template as credentials
 
 
