@@ -6,6 +6,7 @@ the data to be written.
 import csv
 import datetime
 import logging
+import logging.handlers
 
 
 def list_of_dicts_to_csv(data, out_path):
