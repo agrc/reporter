@@ -10,12 +10,12 @@ import logging
 import sys
 from pathlib import Path
 
-from . import reports
+from reporter import reports
 
 try:
-    from . import credentials
+    from reporter import credentials
 except (ModuleNotFoundError, ImportError):
-    from . import credentials_template as credentials
+    from reporter import credentials_template as credentials
 
 
 def run_reports(logger):

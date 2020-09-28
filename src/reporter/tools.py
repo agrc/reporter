@@ -14,9 +14,9 @@ except ModuleNotFoundError:
     pass
 
 try:
-    from . import credentials
+    from reporter import credentials
 except (ModuleNotFoundError, ImportError):
-    from . import credentials_template as credentials
+    from reporter import credentials_template as credentials
 
 
 def _get_sharing(item):

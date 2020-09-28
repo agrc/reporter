@@ -8,10 +8,11 @@ from collections import namedtuple
 import pytest
 
 from reporter import tools
+
 try:
-    from . import credentials
+    from reporter import credentials
 except (ModuleNotFoundError, ImportError):
-    from . import credentials_template as credentials
+    from reporter import credentials_template as credentials
 
 
 @pytest.fixture(scope='function')

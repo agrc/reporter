@@ -3,12 +3,12 @@ Report base class and the actual report classes that inherit from it. Each class
 and a save_report method.
 """
 
-from . import report_writers, tools
+from reporter import report_writers, tools
 
 try:
-    from . import credentials
+    from reporter import credentials
 except (ModuleNotFoundError, ImportError):
-    from . import credentials_template as credentials
+    from reporter import credentials_template as credentials
 
 
 class Report:
