@@ -1,5 +1,3 @@
-import logging
-
 from reporter import report_writers
 
 

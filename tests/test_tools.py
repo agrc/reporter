@@ -7,7 +7,11 @@ from collections import namedtuple
 
 import pytest
 
-from reporter import credentials, tools
+from reporter import tools
+try:
+    from . import credentials
+except ModuleNotFoundError:
+    from . import credentials_template as credentials
 
 
 @pytest.fixture(scope='function')
