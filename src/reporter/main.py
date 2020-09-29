@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 """
-a description of what this module does.
-this file is for testing linting...
+Main entry point for Reporter. Can contain both CLI and (future) scheduled entry points.
 """
 
 import datetime
