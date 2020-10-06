@@ -3,6 +3,11 @@ Report base class and the actual report classes that inherit from it. Each class
 and a save_report method.
 """
 
+try:
+    import arcpy
+except ModuleNotFoundError:
+    pass
+
 from . import report_writers, tools
 
 try:
@@ -48,6 +53,8 @@ class AGOLUsageReport(Report):
         """
         self.logger.info('Creating AGOL Usage Report...')
         item_info_dicts = []
+
+        arcpy.SignInToPortal(credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
 
         org = tools.Organization(self.logger, credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
         folders = org.get_users_folders()
