@@ -32,7 +32,7 @@ setup(
         'Issue Tracker': 'https://github.com/agrc/reporter/issues',
     },
     keywords=['gis'],
-    install_requires=['arcgis==1.8.2'],
+    install_requires=['arcgis==1.8'],
     extras_require={
         'tests': [
             'pylint-quotes==0.2.*',
