@@ -3,10 +3,8 @@
 """
 
 import datetime
-from collections import namedtuple
 
 import pytest
-
 from reporter import tools
 
 try:
