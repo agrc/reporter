@@ -54,7 +54,10 @@ class AGOLUsageReport(Report):
         self.logger.info('Creating AGOL Usage Report...')
         item_info_dicts = []
 
-        arcpy.SignInToPortal(credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
+        try:
+            arcpy.SignInToPortal(credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
+        except NameError as ex:  #: Travis CI throws a NameError on arcpy calls.
+            self.logger.info(ex)
 
         org = tools.Organization(self.logger, credentials.ORG, credentials.USERNAME, credentials.PASSWORD)
         folders = org.get_users_folders()
